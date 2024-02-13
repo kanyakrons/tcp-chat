@@ -1,3 +1,4 @@
+// Server.java
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -10,6 +11,8 @@ import java.util.concurrent.Executors;
 
 public class Server implements Runnable {
 
+    final int STATUS_OK = 200;
+    final int STATUS_ERROR = 500;
 
     private final ArrayList<ConnectionHandler> connections;
     private ServerSocket server;
@@ -69,7 +72,6 @@ public class Server implements Runnable {
 
         public ConnectionHandler(Socket client) {
             this.client = client;
-
         }
 
         @Override
@@ -83,6 +85,7 @@ public class Server implements Runnable {
                 broadcast(nickname + " joined the chat!");
                 String message;
                 while ((message = in.readLine()) != null) {
+                    System.out.println("Client (" + nickname + "): " + message); // Log received message
                     if (message.startsWith("/nick")) {
                         String[] messageSplit = message.split(" ", 2);
                         if (messageSplit.length == 2) {
@@ -106,29 +109,30 @@ public class Server implements Runnable {
         }
 
         public void sendMessage(String message) {
-            out.println(message);
+//            out.println(message);
+            out.println(STATUS_OK + " " + message);
+        }
+
+        private void sendError(String error) {
+            out.println(STATUS_ERROR + " " + error);
         }
 
         public void shutdown() {
-            try{
+            try {
                 in.close();
-
                 out.close();
-                if(!client.isClosed()){
+                if (!client.isClosed()) {
                     client.close();
                 }
 
-            }catch (IOException e){
+            } catch (IOException e) {
                 e.printStackTrace();
             }
         }
-
     }
 
     public static void main(String[] args) {
         Server server = new Server();
         server.run();
     }
-
-
 }
